@@ -12,37 +12,27 @@ struct Formula {
     var operators: CalculatorItemQueue<Operator>
     
     mutating func result() throws -> Double {
-        if operands.items == [] {
-            operands.appendItem(0)
+        guard let firstOperand = operands.dequeue() else {
+            throw QueueError.emptyOperandItem
         }
         
-        if operators.items == [] {
-            throw QueueError.emptyOperatorItem
-        }
+        var result: Double = firstOperand
         
-        let firstOperand = operands.items[0]
-        var operatorItems = operators.items
-        var result = firstOperand
-        
-        repeat {
-            do {
-                let nextOperand = try operands.removeItem()
-                
-                if nextOperand == [] {
-                    throw QueueError.emptyOperandItem
-                }
-                
-                result = try operatorItems[0].calculate(lhs: result, rhs: nextOperand[0])
-            } catch {
+        while !operators.isEmpty {
+            guard let `operator` = operators.dequeue() else {
+                throw QueueError.emptyOperatorItem
+            }
+            
+            guard let operand = operands.dequeue() else {
                 throw QueueError.emptyOperandItem
             }
             
-            do {
-                operatorItems = try operators.removeItem()
-            } catch {
-                throw QueueError.emptyOperatorItem
-            }
-        } while operatorItems.count >= 1
+            result = try `operator`.calculate(lhs: result, rhs: operand)
+        }
+        
+        guard operands.isEmpty else {
+            throw OperationError.invalidFormula
+        }
         
         return result
     }

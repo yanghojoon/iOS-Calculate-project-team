@@ -6,7 +6,7 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class CalculatorViewController: UIViewController {
     private var calculatorManager = CalculatorManager(displayingResult: false, isTypingOperand: false)
     private var formulasStackViewIsEmpty: Bool = true
     
@@ -15,6 +15,7 @@ class ViewController: UIViewController {
             guard let `operator` = operatorLabel.text else {
                 return ""
             }
+            
             return `operator`
         }
         set {
@@ -27,6 +28,7 @@ class ViewController: UIViewController {
             guard let operand = operandLabel.text else {
                 return ""
             }
+            
             return operand
         }
         set {
@@ -38,6 +40,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var formulasStackView: UIStackView!
     @IBOutlet weak var operatorLabel: UILabel!
     @IBOutlet weak var operandLabel: UILabel!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -49,7 +52,7 @@ class ViewController: UIViewController {
 
 // MARK: - Actions
 
-extension ViewController {
+extension CalculatorViewController {
     @IBAction private func touchUpDigitButton(_ sender: UIButton) {
         if calculatorManager.displayingResult {
             initDisplayedFormulas()
@@ -113,6 +116,7 @@ extension ViewController {
         
         guard Double(displayedOperand) != 0.0 else {
             displayedOperator = currentOperandButtionTitle
+            
             return
         }
         
@@ -135,7 +139,7 @@ extension ViewController {
             return
         }
         
-        let convertedOperand = convertSign(from: displayedOperand)
+        let convertedOperand = convertSign(from: &displayedOperand)
         
         displayedOperand = convertedOperand
     }
@@ -156,8 +160,8 @@ extension ViewController {
         } catch OperationError.devidedByZero {
             displayedOperand = "NaN"
             calculatorManager.setDisplayingResultStatus(to: true)
-        } catch {
-            
+        } catch let error {
+            showAlert(message: error.localizedDescription)
         }
         
         initDisplayedOperator()
@@ -166,7 +170,7 @@ extension ViewController {
 
 // MARK: - private Methods
 
-extension ViewController {
+extension CalculatorViewController {
     private func initDisplayedOperator() {
         displayedOperator = ""
     }
@@ -201,11 +205,16 @@ extension ViewController {
         
         calculatorManager.setIsTypingOperandStatus(to: false)
         
+        let (newOperator, newOperand) = convertOperatorAndNegativeOperand(
+            operator: `operator`,
+            operand: operand
+        )
+
         if !formulasStackViewIsEmpty {
-            operatorLabel.text = `operator`
+            operatorLabel.text = newOperator
         }
         
-        operandLabel.text = calculatorManager.format(of: operand)
+        operandLabel.text = calculatorManager.format(of: newOperand)
         operatorLabel.textColor = .white
         operandLabel.textColor = .white
         
@@ -222,14 +231,32 @@ extension ViewController {
         scrollToBottom()
     }
     
-    private func convertSign(from operand: String) -> String {
-        guard let sign = operand.first, sign == "-" else {
-            return "-" + operand
+    private func convertOperatorAndNegativeOperand(`operator`: String,
+                                                   operand: String) -> (String, String) {
+        var newOperand = operand
+        
+        if operand.hasPrefix("-") {
+            switch `operator` {
+            case "+":
+                return ("−", convertSign(from: &newOperand))
+            case "−":
+                return ("+", convertSign(from: &newOperand))
+            default:
+                return (`operator`, operand)
+            }
         }
         
-        let signIndex: String.Index = operand.index(operand.startIndex, offsetBy: 1)
-        
-        return String(operand[signIndex...])
+        return (`operator`, operand)
+    }
+    
+    private func convertSign(from operand: inout String) -> String {
+        if operand.hasPrefix("-") {
+            operand.removeFirst()
+            
+            return operand
+        } else {
+            return "-" + operand
+        }
     }
     
     private func assembleFormula() -> String {
@@ -249,5 +276,14 @@ extension ViewController {
         }
         
         return result.joined(separator: " ")
+    }
+    
+    private func showAlert(message: String) {
+        let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "확인", style: .cancel, handler: nil)
+        
+        alert.addAction(okAction)
+        
+        present(alert, animated: true, completion: nil)
     }
 }

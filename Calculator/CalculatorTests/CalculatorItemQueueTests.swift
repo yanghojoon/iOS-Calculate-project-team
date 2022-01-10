@@ -7,55 +7,39 @@
 
 import XCTest
 
-class CalculatorItemQueueTests: XCTestCase {
-    var operandQueue = CalculatorItemQueue<Double>()
-    var operatorQueue = CalculatorItemQueue<Operator>()
-    
-    override func setUp() {
-        operandQueue.enqueue(1.0)
-        operandQueue.enqueue(2.0)
-        operandQueue.enqueue(13.5)
-        operatorQueue.enqueue(.add)
-        operatorQueue.enqueue(.subtract)
-        operatorQueue.enqueue(.devide)
-        operatorQueue.enqueue(.multiply)
+class CalculatorTests: XCTestCase {
+    func test_빈_배열에서_Double타입_1을_enqueue하면_Double타입_1이_남는다() {
+        var doubleSut: CalculatorItemQueue<Double> = CalculatorItemQueue<Double>()
+        
+        doubleSut.enqueue(1.0)
+        XCTAssertEqual(doubleSut.enqueueStack, [1.0])
     }
     
-    override func tearDown() {
-        operandQueue = CalculatorItemQueue<Double>()
-        operatorQueue = CalculatorItemQueue<Operator>()
+    func test_빈_배열에서_Character타입_더하기를_enqueue하면_연산자배열에_더하기가_생성되는지() {
+        var operatorSut: CalculatorItemQueue<Operator> = CalculatorItemQueue<Operator>()
+        
+        operatorSut.enqueue(.add)
+        XCTAssertEqual(operatorSut.enqueueStack, [.add])
     }
     
-    func testDequeueOperand() {
-        XCTAssertEqual(operandQueue.dequeue(), 1.0)
-        XCTAssertEqual(operandQueue.dequeue(), 2.0)
-        XCTAssertEqual(operandQueue.dequeue(), 13.5)
+    func test_배열에_값이_하나_들어있을_경우_dequeue를_하면_빈_배열로_되는지() {
+        var operatorSut: CalculatorItemQueue<Operator> = CalculatorItemQueue<Operator>()
+        
+        operatorSut.enqueue(.add)
+        try? operatorSut.dequeue() 
+        
+        XCTAssertTrue(operatorSut.isEmpty)
     }
     
-    func testRemoveLastOperand() {
-        XCTAssertEqual(operandQueue.removeLast(), 13.5)
-        XCTAssertEqual(operandQueue.removeLast(), 2.0)
-        XCTAssertEqual(operandQueue.removeLast(), 1.0)
+    func test_빈_Double배열에_dequeue를_하면_오류를_뱉는지() {
+        var doubleSut: CalculatorItemQueue<Double> = CalculatorItemQueue<Double>()
+        
+        XCTAssertNil(try doubleSut.dequeue())
     }
     
-    func testDequeueOperator() {
-        XCTAssertEqual(operatorQueue.dequeue(), .add)
-        XCTAssertEqual(operatorQueue.dequeue(), .subtract)
-        XCTAssertEqual(operatorQueue.dequeue(), .devide)
-        XCTAssertEqual(operatorQueue.dequeue(), .multiply)
-    }
-    
-    func testRemoveLastOperator() {
-        XCTAssertEqual(operatorQueue.removeLast(), .multiply)
-        XCTAssertEqual(operatorQueue.removeLast(), .devide)
-        XCTAssertEqual(operatorQueue.removeLast(), .subtract)
-        XCTAssertEqual(operatorQueue.removeLast(), .add)
-    }
-    
-    func testDequeueWhenEmpty(){
-        operandQueue.dequeue()
-        operandQueue.dequeue()
-        operandQueue.dequeue()
-        XCTAssertEqual(operandQueue.dequeue(), nil)
+    func test_빈_Operator배열에_removeItem을_하면_오류를_뱉는지() {
+        var operatorSut: CalculatorItemQueue<Operator> = CalculatorItemQueue<Operator>()
+        
+        XCTAssertNil(try operatorSut.dequeue())
     }
 }

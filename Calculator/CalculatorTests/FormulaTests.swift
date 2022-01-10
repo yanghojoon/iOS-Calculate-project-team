@@ -8,52 +8,108 @@
 import XCTest
 
 class FormulaTests: XCTestCase {
-    var formula: Formula = Formula(
-        operands: CalculatorItemQueue<Double>(),
-        operators: CalculatorItemQueue<Operator>())
-    
-    override func setUp() {
-        formula.operands.enqueue(3.7)
-        formula.operands.enqueue(4.9)
-        formula.operands.enqueue(0.0)
-        formula.operands.enqueue(12.4)
-        formula.operands.enqueue(-342.6)
+    var sut: Formula?
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        sut = Formula(operands: CalculatorItemQueue<Double>(), operators: CalculatorItemQueue<Operator>())
+    }
+
+    override func tearDownWithError() throws {
+        try super.tearDownWithError()
+        sut = nil
     }
     
-    override func tearDown() {
-        formula = Formula(
-            operands: CalculatorItemQueue<Double>(),
-            operators: CalculatorItemQueue<Operator>())
-    }
-    
-    func testCalculateResult() throws {
-        formula.operators.enqueue(.add)
-        formula.operators.enqueue(.subtract)
-        formula.operators.enqueue(.devide)
-        formula.operators.enqueue(.multiply)
+    func test_연산자_1개_숫자_2개가_있을_경우_더하기_계산이_잘_되는지() {
+        sut?.operands.enqueue(1)
+        sut?.operands.enqueue(2)
+        sut?.operators.enqueue(.add)
         
-        do {
-            let result = try formula.result()
-            XCTAssertEqual(result, ((3.7 + 4.9) - 0.0) / 12.4 * -342.6)
-        } catch QueueError.operandQueueIsEmpty {
-            print(QueueError.operandQueueIsEmpty.localizedDescription)
-        } catch QueueError.operatorQueueIsEmpty {
-            print(QueueError.operatorQueueIsEmpty.localizedDescription)
-        } catch OperationError.devidedByZero {
-            print(OperationError.devidedByZero.localizedDescription)
-        } catch {
-            print(error.localizedDescription)
-        }
+        XCTAssertEqual(try sut?.result(), 3)
     }
     
-    
-    func testCalculateResultWhereDevideByZero() throws {
-        formula.operators.enqueue(.add)
-        formula.operators.enqueue(.devide)
-        formula.operators.enqueue(.subtract)
-        formula.operators.enqueue(.multiply)
+    func test_연산자_1개_숫자_1개가_있을_경우_제대로_오류를_뱉는지() {
+        sut?.operands.enqueue(1)
+        sut?.operators.enqueue(.add)
         
-        XCTAssertThrowsError(try formula.result())
+        XCTAssertThrowsError(try sut?.result())
+    }
+    
+    func test_연산자_1개만_있을_경우_제대로_오류를_뱉는지() {
+        sut?.operators.enqueue(.add)
+        
+        XCTAssertThrowsError(try sut?.result())
+    }
+    
+    func test_연산자_1개_숫자_2개가_있을_경우_빼기_계산이_잘_되는지() {
+        sut?.operands.enqueue(2)
+        sut?.operands.enqueue(1)
+        sut?.operators.enqueue(.subtract)
+        
+        XCTAssertEqual(try sut?.result(), 1)
+    }
+    
+    func test_연산자_1개_숫자_2개가_있을_경우_나누기_계산이_잘_되는지() {
+        sut?.operands.enqueue(6)
+        sut?.operands.enqueue(2)
+        sut?.operators.enqueue(.divide)
+        
+        XCTAssertEqual(try sut?.result(), 3)
+    }
+    
+    func test_연산자_1개_숫자_2개가_있을_경우_곱하기_계산이_잘_되는지() {
+        sut?.operands.enqueue(2)
+        sut?.operands.enqueue(4)
+        sut?.operators.enqueue(.multiply)
+        
+        XCTAssertEqual(try sut?.result(), 8)
+    }
+    
+    func test_다양한_연산자와_숫자가_있을_경우_계산이_잘_되는지() {
+        sut?.operands.enqueue(3)
+        sut?.operands.enqueue(2)
+        sut?.operands.enqueue(2)
+        sut?.operands.enqueue(2)
+        sut?.operands.enqueue(3)
+        sut?.operands.enqueue(2)
+        sut?.operators.enqueue(.add)
+        sut?.operators.enqueue(.multiply)
+        sut?.operators.enqueue(.divide)
+        sut?.operators.enqueue(.add)
+        sut?.operators.enqueue(.subtract)
+        
+        XCTAssertEqual(try sut?.result(), 6)
+    }
+    
+    func test_음수가_섞인_다양한_연산자와_숫자가_있을_경우_계산이_잘_되는지() {
+        sut?.operands.enqueue(3)
+        sut?.operands.enqueue(-2)
+        sut?.operands.enqueue(2)
+        sut?.operands.enqueue(2)
+        sut?.operands.enqueue(3)
+        sut?.operands.enqueue(-2)
+        sut?.operators.enqueue(.add)
+        sut?.operators.enqueue(.multiply)
+        sut?.operators.enqueue(.divide)
+        sut?.operators.enqueue(.add)
+        sut?.operators.enqueue(.subtract)
+        
+        XCTAssertEqual(try sut?.result(), 6)
+    }
+    
+    func test_다양한_연산자와_음수가_있을_경우_계산이_잘_되는지() {
+        sut?.operands.enqueue(-3)
+        sut?.operands.enqueue(-2)
+        sut?.operands.enqueue(-2)
+        sut?.operands.enqueue(-2)
+        sut?.operands.enqueue(-3)
+        sut?.operands.enqueue(-2)
+        sut?.operators.enqueue(.add)
+        sut?.operators.enqueue(.multiply)
+        sut?.operators.enqueue(.divide)
+        sut?.operators.enqueue(.add)
+        sut?.operators.enqueue(.subtract)
+        
+        XCTAssertEqual(try sut?.result(), -6)
     }
 }
-
